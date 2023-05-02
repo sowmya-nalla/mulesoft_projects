@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="932c6c2d-5021-4384-a745-2655105be603" basePath="/employees" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="572df55d-56ee-4fe2-a0a8-b184809c6308">
+		<http:request-connection host="dummy.restapiexample.com" port="8081"/>
+	</http:request-config>
+	<flow name="diy_excercisesFlow" doc:id="30ab31a3-49df-49b2-bba7-842448a3030a" >
+		<http:listener doc:name="Listener" doc:id="4379008a-3cd6-44a6-aa40-e3ac5d0b7536" path="/employees/123" config-ref="HTTP_Listener_config"/>
+		<http:request method="GET" doc:name="Request" doc:id="cf06ebf8-ccc6-4261-86e1-42d3440e35d5" config-ref="HTTP_Request_configuration" path="/api/v1"/>
+		<logger level="INFO" doc:name="Logger" doc:id="558ff272-1e3e-4a88-9fc1-214e820fc0d1" message="#[payload]"/>
+	</flow>
+</mule>
