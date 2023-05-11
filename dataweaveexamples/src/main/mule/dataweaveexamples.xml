@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="bc9a6d37-ac22-4aad-9da3-4da170d61b3d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="xmlparsingwithnamespace" doc:id="bd14e1ec-c692-4fe5-a21c-b5d3719f9f64" >
+		<http:listener doc:name="XmlParsingWithNamespace" doc:id="ee848cd8-7ab4-458e-b23a-c7ec81e82f94" path="/withnamespace" config-ref="HTTP_Listener_config"/>
+		<ee:transform doc:name="Transform Message" doc:id="1dda9769-ffe0-4cfa-9be2-efee22adc5d4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+ns org http://www.mycompany.org/employees
+---
+payload.org#employees.*org#employee map {
+  fullname : $.org#name.org#firstname ++ " " ++ $.org#name.org#lastname,
+  age: $.org#name.@age,
+  hiredate : $.org#hiredate,
+  product : $.org#projects.org#project.org#product
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="xmlparsingwithoutnamespace" doc:id="6ba684ee-450d-4fdf-ab87-7f4b1ffcafc9" >
+		<http:listener doc:name="xmlparsingwithoutnamespaceListener" doc:id="3ae1a907-9325-47e0-a5a9-e6e0085aa555" config-ref="HTTP_Listener_config" path="/withoutnamespace"/>
+		<ee:transform doc:name="Transform Message" doc:id="08050e5a-c96d-4761-a6f0-5c1e08e9e006" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload.employees.*employee map {
+  fullname : $.name.firstname ++ " " ++ $.name.lastname,
+  age: $.name.@age,
+  hiredate : $.hiredate,
+  product : $.projects.project.product
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="arrayfunctionsFlow" doc:id="b52f70ac-c3c2-43d4-82bd-7551e6a5328b" >
+		<http:listener doc:name="ArrayFunctionsListener" doc:id="9360884a-205a-4a42-8265-a04379c0aea2" config-ref="HTTP_Listener_config" path="/array"/>
+		<ee:transform doc:name="Transform Message" doc:id="77be4739-a64c-4803-bf05-0b61a22f5020" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+var samplearray = ["124", "35454", "Sachin","Amit"]
+output application/json
+---
+"dropValue":drop(samplearray, 1)
+
+
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dataweaveexamplesFlow" doc:id="012b4efa-2747-4c73-b2a6-00d486daa6ca" >
+		<http:listener doc:name="joinTwoArraysListnerer" doc:id="449de635-31eb-422e-87a6-8ead4e4672a3" config-ref="HTTP_Listener_config" path="/joinarray"/>
+		<ee:transform doc:name="joinTwoArrays" doc:id="5dc991dc-e10a-4af5-8023-b2185fdffdaa" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+ 
+var items = [{id: "12", name:"Tea"},{id: "22", name:"Salt"},{id: "3", name:"Soap"},{id: "5", name:"Butter"}]
+ 
+var Prices = [{Id: "12", price:123},{Id: "3", price:24}, {Id: "22", price:20}, {Id: "4", price:456}]
+ 
+output application/json
+---
+join(items, Prices, (item) -> item.id, (price) -> price.Id)
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sumbyFlow" doc:id="cdfc67c5-68c0-4424-8b36-18a15869d639" >
+		<http:listener doc:name="SumByListener" doc:id="9a3dcb52-90ed-4ee0-9464-fd8acffd5616" config-ref="HTTP_Listener_config" path="/sumBy"/>
+		<ee:transform doc:name="Transform Message" doc:id="1fcb9ef8-d04d-4c15-ac48-39c3fb4d7f25" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+ 
+---
+{
+  "TotalItems" : [
+    { items: 233},
+    { items: 324 },
+    { items: 30 }
+  ] sumBy $.items
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
