@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="localdata" doc:id="79215c59-44d2-41af-8816-019e9dcef856" >
+		<ee:transform doc:name="Transform Message" doc:id="f738177d-e60b-46dd-aaaf-7e53d6791137" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var f =readUrl("classpath://examples/united-flights-example.json").flights
+var prices = f.price orderBy -$
+---
+//prices filter  {item,index} -> item < 500
+prices map (item, index ) -> item + 400]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="handmadeData" doc:id="abad93b2-eb0d-47cb-a551-f4484ffd779e" >
+		<ee:transform doc:name="Transform Message" doc:id="18a101e8-cc98-4801-9462-bce00265c85b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+var i = 42
+var f=3.14
+var b =false
+var o={one:1,two:2,three:3}
+var a = [1,2,3,5,8,10]
+var p= 1 to 10
+var s = "words updating"
+---
+{
+	aNumber : i,
+	anotherNumber: f,
+	whichType : typeOf(i),
+	whichType : typeOf(b),
+	whichType : typeOf(f),
+	whichType : typeOf(p),
+	anObject : o,
+	whichType : typeOf(a),
+	selectedElement : a[-4],//negative index resolves end of array
+	patchArray : p[2 to 5],
+	aSentance : s
+	
+	
+}]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="LastExit" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+				<ee:set-variable variableName="firstExit" ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</flow>
+</mule>
