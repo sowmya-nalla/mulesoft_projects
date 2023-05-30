@@ -1,0 +1,199 @@
+#%RAML 1.0
+title: Banking_project
+/createAccount :
+  post:
+    queryParameters:
+      customerName :
+        required: true
+        maxLength: 45
+        minLength: 4
+      bank :
+        required: true
+        enum:
+          - ICICI
+          - HDFC
+          - AXIS
+      type :
+        required: true
+        enum:
+          - savings
+          - current
+      branchName :
+        required: true
+        maxLength: 10
+        minLength: 4
+    body:
+      application/json:
+        properties:
+          accountnum :
+            type: string
+            required: true
+            minLength: 10
+            maxLength: 10
+          ifscCode :
+            type: string
+            minLength: 4
+            maxLength: 10
+          depositAmount:
+            required: false
+            type: number
+          mailId:
+            required: true
+            type: string
+          contact:
+            type: string
+            required: true
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              status :" Account Created Successfully with Account xxxxxx Number"
+
+/ checkBalance :
+    post:
+      queryParameters:
+        bank:
+          required: true
+          enum:
+            - ICICI
+            - AXIS
+            - HDFC
+        type:
+          enum:
+            - savings
+            - current
+      body:
+        application/json:
+          properties:
+            accountNum :
+              required: true
+              type: string
+              maxLength: 10
+              minLength: 10
+            atmPin :
+              required: true
+              maxLength: 4
+              minLength: 4
+      responses:
+        201:
+          body:
+            application/json:
+              example:
+                status: "Your total balance is xxxxxxx as on 20-May-2020 is xxxxxxx "
+
+/ checkbalance :
+  post:
+    queryParameters:
+      bank:
+        required: true
+        enum:
+          - ICICI
+          - HDFC
+          - AXIS
+      type:
+        required: true
+        enum:
+          - savings
+          - current 
+    body:
+      application/json:
+        properties:
+          accountNum :
+            type: string
+            required: true
+            maxLength: 10
+            minLength: 10
+          atmPin :
+            required: true
+            type: string
+            maxLength: 4
+            minLength: 4
+    responses:
+      200:
+        body:
+          application/json:
+              example:
+                status: "Your total balance is xxxxxxxx as on 20-May-2020 is xxxxxxx "
+
+/ withDraw :
+  post:
+    queryParameters:
+      bank:
+        required: true
+        enum:
+          - ICICI
+          - HDFC
+          - AXIS
+      type:
+        required: true
+        enum:
+          - savings
+          - current 
+    body:
+      application/json:
+        properties:
+          accountNum :
+            type: string
+            required: true
+            maxLength: 10
+            minLength: 10
+          atmPin :
+            required: true
+            type: string
+            maxLength: 4
+            minLength: 4
+          amountToBeWithdraw :
+            type: number
+            required: true
+
+    responses:
+      200:
+        body:
+          application/json:
+              example:
+                status: "Amount xxxx is debited . Your total balance is xxxxxx "
+
+/unblock :
+  put:
+    body:
+      application/json:
+        properties:
+          user :
+            default: admin
+          password :
+            default: admin
+          accountNum :
+            required: true
+            type: string
+            minLength: 10
+            maxLength: 10
+          bank :
+            required: true
+            enum:
+              - ICICI
+              - AXIS
+              - HDFC
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              status : "Account xxxxx is unblocked"
+      
+
+            
+
+
+      
+                
+
+          
+          
+
+       
+        
+
+
+
+

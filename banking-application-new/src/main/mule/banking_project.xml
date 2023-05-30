@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <http:listener-config name="banking_project-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="banking_project-config" api="banking_project.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="1810699a-5d43-4ab3-b4d7-60837d62494e" >
+		<db:my-sql-connection host="bank.culqadoeolbl.us-east-2.rds.amazonaws.com" port="3306" user="admin" password="admin123" database="bank" />
+	</db:config>
+	<flow name="banking_project-main">
+        <http:listener config-ref="banking_project-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="banking_project-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="banking_project-console">
+        <http:listener config-ref="banking_project-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="banking_project-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\unblock:application\json:banking_project-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Account xxxxx is unblocked"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="post:\ checkBalance:application\json:banking_project-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Your total balance is xxxxxxx as on 20-May-2020 is xxxxxxx "
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="banking_projectFlow" doc:id="fda45022-b245-4aea-a24c-d025bc54731e" >
+		<logger level="INFO" doc:name="Logger" doc:id="aa22eb1e-cae3-46fe-9da1-e5b0f9122bfe" />
+	</flow>
+	<flow name="\checkbalance">
+        <http:listener doc:name="Listener" doc:id="d188ed4a-7593-444c-8f1b-c9db6175ea37" config-ref="banking_project-httpListenerConfig" path="/checkbalance"/>
+		<db:select doc:name="check for account num" doc:id="404ade2f-2a84-4a28-94fc-9d407d1d4b02" config-ref="Database_Config">
+			<db:sql ><![CDATA[select custName,custAccNum,atmPin,bankName,ifscCode,branchName,totalBalance,transactionTimeStamp,mailId,phoneNumber,accountType from Bank_Transactions where custAccNum=:accountNum;]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	accountNum:attributes.queryParams.custAccNum
+	
+	}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="output logger" doc:id="43883409-8f1b-415b-ad9a-77ac8328ca33" message="#[payload[0].custName]"/>
+		<ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="872cc1ee-61ab-44e7-bb50-9e66e7ab16db" type="ANY">
+				<logger level="INFO" doc:name="Logger" doc:id="cb91aa62-213e-42a1-be1f-76ca6567dc82" />
+			</on-error-continue>
+		</error-handler>
+    </flow>
+    <flow name="post:\createAccount:application\json:banking_project-config">
+        <http:listener doc:name="create Account Listener" doc:id="9c0f47ca-2a8c-4500-88e2-fba80628ba62" path="createAccount" config-ref="banking_project-httpListenerConfig"/>
+		<db:select doc:name="SelectAccount" doc:id="9dbef066-e717-4180-bf56-c33445163f05" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from Bank_Transactions where custAccNum=:accountnum and bankName=:bank]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	accountnum:payload.accountnum,
+	bank : attributes.queryParams.bank
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="a5125d06-b5e1-40bc-9f22-76628413d599" >
+			<when expression="#[sizeOf(payload ) != 0]">
+				<logger level="INFO" doc:name="Logger" doc:id="f84ea8d1-b1a9-4ebc-a6a1-8dd72ed06ffc" message='#["Account already exists"]'/>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="input logger" doc:id="9612f87f-2df8-4455-89b8-3e6b2907dd7e" message="#[payload]" />
+				<db:insert doc:name="Insert an account" doc:id="98c23824-5ef3-45d9-82d6-67843d673391" config-ref="Database_Config" autoGenerateKeys="true">
+			<db:sql><![CDATA[INSERT INTO Bank_Transactions
+(custName,custAccNum,atmPin,bankName,ifscCode,branchName,totalBalance,transactionTimeStamp,mailId,phoneNumber,accountType)
+ VALUES (:custName,:custAccNum,:atmPin,:bankName,:ifscCode,:branchName,:totalBalance,:transactionTimeStamp,:mailId,:phoneNumber,:accountType);]]></db:sql>
+			<db:input-parameters><![CDATA[#[{custName:attributes.queryParams.custName,
+custAccNum:payload.accountnum,
+atmPin : payload.atmPin,
+bankName : attributes.queryParams.bank,
+ifscCode : payload.ifscCode,
+branchName : attributes.queryParams.branchName,
+totalBalance : payload.depositAmount ,
+transactionTimeStamp : now() as String,
+mailId : payload.mailId ,
+phoneNumber : payload.contact,
+accountType : attributes.queryParams.'accountType'
+	
+	
+	
+	
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names>
+				<db:auto-generated-keys-column-name value="pk" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+				<ee:transform doc:name="Transform Message" doc:id="8ae636fe-916d-478a-8b67-e85c456df8d8">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+"status":	"Account inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="32810c25-79d6-4903-a0fd-d254e3e8a9ca" type="ANY">
+				<logger level="INFO" doc:name="Logger" doc:id="0ab5eb11-0321-4498-a1e6-0351f9c19de8" message="#[payload]"/>
+			</on-error-propagate>
+		</error-handler>
+    </flow>
+    <flow name="createAccount" doc:id="6b2dde25-da48-4151-b0df-50134d32c32b" >
+		<http:listener doc:name="/account" doc:id="57e55db2-27a4-432c-9362-60816847b3cc" config-ref="banking_project-httpListenerConfig" path="/account"/>
+		<logger level="INFO" doc:name="input logger" doc:id="62230e2f-7843-4ecb-b9b8-3b4202cdf6cf" message="#[payload]" />
+		<db:insert doc:name="Insert an account" doc:id="f34e844e-acec-4170-8375-36fa2855acde" config-ref="Database_Config" autoGenerateKeys="true" >
+			<db:sql ><![CDATA[INSERT INTO Bank_Transactions
+(custName,custAccNum,atmPin,bankName,ifscCode,branchName,totalBalance,transactionTimeStamp,mailId,phoneNumber,accountType)
+ VALUES (:custName,:custAccNum,:atmPin,:bankName,:ifscCode,:branchName,:totalBalance,:transactionTimeStamp,:mailId,:phoneNumber,:accountType);]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{custName:attributes.queryParams.custName,
+custAccNum:payload.accountnum,
+atmPin : payload.atmPin,
+bankName : attributes.queryParams.bankName,
+ifscCode : payload.ifscCode,
+branchName : attributes.queryParams.branchName,
+totalBalance : payload.depositAmount ,
+transactionTimeStamp : now() as String,
+mailId : payload.mailId ,
+phoneNumber : payload.phoneNumber,
+accountType : attributes.queryParams.'accountType'
+	
+	
+	
+	
+}]]]></db:input-parameters>
+			<db:auto-generated-keys-column-names >
+				<db:auto-generated-keys-column-name value="pk" />
+			</db:auto-generated-keys-column-names>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="d44af7f8-3cfe-470e-89da-e3d3b7025734" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"status":	"Account inserted successfully"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="post:\ withDraw:application\json:banking_project-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  status: "Amount xxxx is debited . Your total balance is xxxxxx "
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+</mule>
